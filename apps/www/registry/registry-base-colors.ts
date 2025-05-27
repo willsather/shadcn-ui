@@ -754,6 +754,12 @@ export const baseColors = [
 ] as const
 
 export type BaseColor = (typeof baseColors)[number]
+export type ThemeName = (typeof baseColors)[number]["name"]
+
+export interface BaseColorOKLCH {
+  light: Record<string, string>
+  dark: Record<string, string>
+}
 
 export const baseColorsV4 = {
   stone: {

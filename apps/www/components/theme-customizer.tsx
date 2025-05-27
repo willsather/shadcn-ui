@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import template from "lodash/template"
-import { Check, ClipboardIcon, Copy } from "lucide-react"
+import { Check, ClipboardIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { cn } from "@/lib/utils"
@@ -41,19 +40,13 @@ import {
 } from "@/registry/registry-base-colors"
 
 import "@/styles/mdx.css"
-import { toast } from "sonner"
-
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/registry/new-york/ui/tabs"
-
-interface BaseColorOKLCH {
-  light: Record<string, string>
-  dark: Record<string, string>
-}
+import { getThemeCode, getThemeCodeOKLCH } from "@/lib/theme-code"
 
 export function ThemeCustomizer() {
   const [config, setConfig] = useConfig()
@@ -179,7 +172,7 @@ export function Customizer() {
                   className={cn(
                     "w-[40px] rounded-lg",
                     config.radius === parseFloat(value) &&
-                      "border-primary/50 ring-[2px] ring-primary/30"
+                    "border-primary/50 ring-[2px] ring-primary/30"
                   )}
                 >
                   {value}
@@ -188,8 +181,38 @@ export function Customizer() {
             })}
           </div>
         </div>
+
         <div className="flex gap-2 sm:ml-auto">
           <CopyCodeButton />
+
+          <Button
+            aria-label="Open in v0"
+            className="h-8 gap-1 rounded-lg bg-black px-3 text-xs text-white hover:bg-black hover:text-white dark:bg-white dark:text-black"
+            asChild
+          >
+            <a
+              href={`https://v0.dev/chat/api/open?url=https://ui.shadcn.com/themes/${config.theme}/r/theme.json`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open in{" "}
+              <svg
+                viewBox="0 0 40 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-current"
+              >
+                <path
+                  d="M23.3919 0H32.9188C36.7819 0 39.9136 3.13165 39.9136 6.99475V16.0805H36.0006V6.99475C36.0006 6.90167 35.9969 6.80925 35.9898 6.71766L26.4628 16.079C26.4949 16.08 26.5272 16.0805 26.5595 16.0805H36.0006V19.7762H26.5595C22.6964 19.7762 19.4788 16.6139 19.4788 12.7508V3.68923H23.3919V12.7508C23.3919 12.9253 23.4054 13.0977 23.4316 13.2668L33.1682 3.6995C33.0861 3.6927 33.003 3.68923 32.9188 3.68923H23.3919V0Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M13.7688 19.0956L0 3.68759H5.53933L13.6231 12.7337V3.68759H17.7535V17.5746C17.7535 19.6705 15.1654 20.6584 13.7688 19.0956Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </a>
+          </Button>
         </div>
       </div>
     </ThemeWrapper>
@@ -197,25 +220,27 @@ export function Customizer() {
 }
 
 export function CopyCodeButton({
-  className,
-  ...props
-}: React.ComponentProps<typeof Button>) {
+                                 className,
+                                 ...props
+                               }: React.ComponentProps<typeof Button>) {
   return (
     <>
       <Drawer>
         <DrawerTrigger asChild>
           <Button
+            variant="outline"
             className={cn("h-8 rounded-lg shadow-none sm:hidden", className)}
             {...props}
           >
-            Copy
+            Export
           </Button>
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Theme</DrawerTitle>
+            <DrawerTitle>Export Theme</DrawerTitle>
             <DrawerDescription>
-              Copy and paste the following code into your CSS file.
+              Use this theme by either pasting in your CSS file or by
+              integrating into your AI IDE using MCP.
             </DrawerDescription>
           </DrawerHeader>
           <ThemeWrapper defaultTheme="zinc" className="relative px-6">
@@ -226,23 +251,28 @@ export function CopyCodeButton({
       <Dialog>
         <DialogTrigger asChild>
           <Button
+            variant="outline"
             className={cn(
               "hidden h-8 rounded-lg shadow-none sm:flex",
               className
             )}
             {...props}
           >
-            Copy code
+            Export
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-2xl outline-none">
           <DialogHeader>
-            <DialogTitle>Theme</DialogTitle>
+            <DialogTitle>Export Theme</DialogTitle>
             <DialogDescription>
-              Copy and paste the following code into your CSS file.
+              Use this theme by either pasting in your CSS file or by
+              integrating into your AI IDE using MCP.
             </DialogDescription>
           </DialogHeader>
-          <ThemeWrapper defaultTheme="zinc" className="relative">
+          <ThemeWrapper
+            defaultTheme="zinc"
+            className="relative overflow-x-scroll"
+          >
             <CustomizerCode />
           </ThemeWrapper>
         </DialogContent>
@@ -254,7 +284,7 @@ export function CopyCodeButton({
 function CustomizerCode() {
   const [config] = useConfig()
   const [hasCopied, setHasCopied] = React.useState(false)
-  const [themeVersion, setThemeVersion] = React.useState("v4")
+  const [tab, setTab] = React.useState("v4")
   const activeTheme = React.useMemo(
     () => baseColors.find((theme) => theme.name === config.theme),
     [config.theme]
@@ -272,30 +302,55 @@ function CustomizerCode() {
     }
   }, [hasCopied])
 
+  const mcpServer = JSON.stringify(
+    {
+      mcpServers: {
+        shadcn: {
+          command: "npx",
+          args: ["-y", "shadcn@canary", "registry:mcp"],
+          env: {
+            REGISTRY_URL: `https://ui.shadcn.com/themes/${config.theme}/${config.radius}/r/registry.json`,
+          },
+        },
+      },
+    },
+    null,
+    2
+  )
+
+  function getTabContent(tab: string) {
+    if (tab === "v3") {
+      return getThemeCode(activeTheme, config.radius)
+    }
+
+    if (tab === "cursor" || "windsurf") {
+      return mcpServer
+    }
+
+    return getThemeCodeOKLCH(activeThemeOKLCH, config.radius)
+  }
+
   return (
     <ThemeWrapper defaultTheme="zinc" className="relative space-y-4">
-      <Tabs value={themeVersion} onValueChange={setThemeVersion}>
+      <Tabs value={tab} onValueChange={setTab}>
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="v4">Tailwind v4</TabsTrigger>
-            <TabsTrigger value="v3">v3</TabsTrigger>
+            <TabsTrigger value="v3">Tailwind v3</TabsTrigger>
+            <TabsTrigger value="cursor">Cursor</TabsTrigger>
+            <TabsTrigger value="windsurf">Windsurf</TabsTrigger>
           </TabsList>
           <Button
             size="sm"
             variant="outline"
             onClick={() => {
-              copyToClipboardWithMeta(
-                themeVersion === "v3"
-                  ? getThemeCode(activeTheme, config.radius)
-                  : getThemeCodeOKLCH(activeThemeOKLCH, config.radius),
-                {
-                  name: "copy_theme_code",
-                  properties: {
-                    theme: config.theme,
-                    radius: config.radius,
-                  },
-                }
-              )
+              copyToClipboardWithMeta(getTabContent(tab), {
+                name: "copy_theme_code",
+                properties: {
+                  theme: config.theme,
+                  radius: config.radius,
+                },
+              })
               setHasCopied(true)
             }}
             className="absolute right-0 top-0 shadow-none"
@@ -361,7 +416,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.light[
                           prefix as keyof typeof activeTheme.cssVars.light
-                        ]
+                          ]
                       }
                       ;
                     </span>
@@ -370,7 +425,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.light[
                           `${prefix}-foreground` as keyof typeof activeTheme.cssVars.light
-                        ]
+                          ]
                       }
                       ;
                     </span>
@@ -399,7 +454,7 @@ function CustomizerCode() {
                         {
                           activeTheme?.cssVars.light[
                             prefix as keyof typeof activeTheme.cssVars.light
-                          ]
+                            ]
                         }
                         ;
                       </span>
@@ -434,7 +489,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.dark[
                           prefix as keyof typeof activeTheme.cssVars.dark
-                        ]
+                          ]
                       }
                       ;
                     </span>
@@ -443,7 +498,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.dark[
                           `${prefix}-foreground` as keyof typeof activeTheme.cssVars.dark
-                        ]
+                          ]
                       }
                       ;
                     </span>
@@ -469,7 +524,7 @@ function CustomizerCode() {
                         {
                           activeTheme?.cssVars.dark[
                             prefix as keyof typeof activeTheme.cssVars.dark
-                          ]
+                            ]
                         }
                         ;
                       </span>
@@ -482,98 +537,34 @@ function CustomizerCode() {
             </pre>
           </div>
         </TabsContent>
+        <TabsContent value="cursor">
+          <p className="mb-2 text-sm text-muted-foreground">
+            Copy and paste the code into{" "}
+            <span className="font-mono">.cursor/mcp.json</span>
+          </p>
+
+          <div data-rehype-pretty-code-fragment="">
+            <pre className="max-h-[450px] overflow-x-scroll rounded-lg border bg-zinc-950 py-4 dark:bg-zinc-900">
+              <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
+                <span className="line text-white">{mcpServer}</span>
+              </code>
+            </pre>
+          </div>
+        </TabsContent>
+        <TabsContent value="windsurf">
+          <p className="mb-2 text-sm text-muted-foreground">
+            Copy and paste the code into{" "}
+            <span className="font-mono">.codeium/windsurf/mcp_config.json</span>
+          </p>
+          <div data-rehype-pretty-code-fragment="">
+            <pre className="max-h-[450px] overflow-x-scroll rounded-lg border bg-zinc-950 py-4 dark:bg-zinc-900">
+              <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
+                <span className="line text-white">{mcpServer}</span>
+              </code>
+            </pre>
+          </div>
+        </TabsContent>
       </Tabs>
     </ThemeWrapper>
   )
 }
-
-function getThemeCodeOKLCH(theme: BaseColorOKLCH | undefined, radius: number) {
-  if (!theme) {
-    return ""
-  }
-
-  const rootSection =
-    ":root {\n  --radius: " +
-    radius +
-    "rem;\n" +
-    Object.entries(theme.light)
-      .map((entry) => "  --" + entry[0] + ": " + entry[1] + ";")
-      .join("\n") +
-    "\n}\n\n.dark {\n" +
-    Object.entries(theme.dark)
-      .map((entry) => "  --" + entry[0] + ": " + entry[1] + ";")
-      .join("\n") +
-    "\n}\n"
-
-  return rootSection
-}
-
-function getThemeCode(theme: BaseColor | undefined, radius: number) {
-  if (!theme) {
-    return ""
-  }
-
-  return template(BASE_STYLES_WITH_VARIABLES)({
-    colors: theme.cssVars,
-    radius: radius.toString(),
-  })
-}
-
-const BASE_STYLES_WITH_VARIABLES = `
-@layer base {
-  :root {
-    --background: <%- colors.light["background"] %>;
-    --foreground: <%- colors.light["foreground"] %>;
-    --card: <%- colors.light["card"] %>;
-    --card-foreground: <%- colors.light["card-foreground"] %>;
-    --popover: <%- colors.light["popover"] %>;
-    --popover-foreground: <%- colors.light["popover-foreground"] %>;
-    --primary: <%- colors.light["primary"] %>;
-    --primary-foreground: <%- colors.light["primary-foreground"] %>;
-    --secondary: <%- colors.light["secondary"] %>;
-    --secondary-foreground: <%- colors.light["secondary-foreground"] %>;
-    --muted: <%- colors.light["muted"] %>;
-    --muted-foreground: <%- colors.light["muted-foreground"] %>;
-    --accent: <%- colors.light["accent"] %>;
-    --accent-foreground: <%- colors.light["accent-foreground"] %>;
-    --destructive: <%- colors.light["destructive"] %>;
-    --destructive-foreground: <%- colors.light["destructive-foreground"] %>;
-    --border: <%- colors.light["border"] %>;
-    --input: <%- colors.light["input"] %>;
-    --ring: <%- colors.light["ring"] %>;
-    --radius: <%- radius %>rem;
-    --chart-1: <%- colors.light["chart-1"] %>;
-    --chart-2: <%- colors.light["chart-2"] %>;
-    --chart-3: <%- colors.light["chart-3"] %>;
-    --chart-4: <%- colors.light["chart-4"] %>;
-    --chart-5: <%- colors.light["chart-5"] %>;
-  }
-
-  .dark {
-    --background: <%- colors.dark["background"] %>;
-    --foreground: <%- colors.dark["foreground"] %>;
-    --card: <%- colors.dark["card"] %>;
-    --card-foreground: <%- colors.dark["card-foreground"] %>;
-    --popover: <%- colors.dark["popover"] %>;
-    --popover-foreground: <%- colors.dark["popover-foreground"] %>;
-    --primary: <%- colors.dark["primary"] %>;
-    --primary-foreground: <%- colors.dark["primary-foreground"] %>;
-    --secondary: <%- colors.dark["secondary"] %>;
-    --secondary-foreground: <%- colors.dark["secondary-foreground"] %>;
-    --muted: <%- colors.dark["muted"] %>;
-    --muted-foreground: <%- colors.dark["muted-foreground"] %>;
-    --accent: <%- colors.dark["accent"] %>;
-    --accent-foreground: <%- colors.dark["accent-foreground"] %>;
-    --destructive: <%- colors.dark["destructive"] %>;
-    --destructive-foreground: <%- colors.dark["destructive-foreground"] %>;
-    --border: <%- colors.dark["border"] %>;
-    --input: <%- colors.dark["input"] %>;
-    --ring: <%- colors.dark["ring"] %>;
-    --chart-1: <%- colors.dark["chart-1"] %>;
-    --chart-2: <%- colors.dark["chart-2"] %>;
-    --chart-3: <%- colors.dark["chart-3"] %>;
-    --chart-4: <%- colors.dark["chart-4"] %>;
-    --chart-5: <%- colors.dark["chart-5"] %>;
-  }
-}
-`
