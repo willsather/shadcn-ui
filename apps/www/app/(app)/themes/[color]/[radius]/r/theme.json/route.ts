@@ -18,7 +18,7 @@ export function generateStaticParams() {
   for (const theme of availableThemes) {
     for (const radius of availableRadii) {
       params.push({
-        themeId: theme.name,
+        color: theme.name,
         radius: radius.toString(),
       });
     }

@@ -191,7 +191,7 @@ export function Customizer() {
             asChild
           >
             <a
-              href={`https://v0.dev/chat/api/open?url=https://ui.shadcn.com/themes/${config.theme}/r/theme.json`}
+              href={`https://v0.dev/chat/api/open?url=https://shadcn-ui-fork.vercel.app/themes/${config.theme}/r/theme.json`}
               target="_blank"
               rel="noreferrer"
             >
