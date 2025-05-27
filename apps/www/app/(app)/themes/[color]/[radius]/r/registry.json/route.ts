@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { baseColors, ThemeName } from "@/registry/registry-base-colors"
+import { baseColorsOKLCH } from "@/registry/registry-base-colors"
 import { getThemeRegistryItem } from "@/lib/theme-code"
 
 export const dynamicParams = false
@@ -9,16 +9,14 @@ export function generateStaticParams() {
   const availableRadii = [0, 0.3, 0.5, 0.75, 1];
 
   // limit themes to only the color themes
-  const availableThemes = baseColors.filter((theme) =>
-    !["slate", "stone", "gray", "neutral"].includes(theme.name)
-  );
+  const colors = Object.keys(baseColorsOKLCH);
 
   const params = [];
 
-  for (const theme of availableThemes) {
+  for (const color of colors) {
     for (const radius of availableRadii) {
       params.push({
-        color: theme.name,
+        color,
         radius: radius.toString(),
       });
     }
@@ -29,11 +27,11 @@ export function generateStaticParams() {
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ color: ThemeName, radius: number }> }
+  { params }: { params: Promise<{ color: string, radius: number }> }
 ) {
   const { color, radius } = await params
 
-  const theme = baseColors.find((theme) => theme.name === color)
+  const theme = baseColorsOKLCH[color as keyof typeof baseColorsOKLCH]
 
   const registryItem = getThemeRegistryItem(theme, radius)
 

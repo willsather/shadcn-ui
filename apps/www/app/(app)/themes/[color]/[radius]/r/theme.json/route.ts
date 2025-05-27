@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { baseColors, ThemeName } from "@/registry/registry-base-colors"
-import { getThemeCode } from "@/lib/theme-code"
+import { baseColorsOKLCH } from "@/registry/registry-base-colors"
+import { getThemeCodeOKLCH } from "@/lib/theme-code"
 
 export const dynamicParams = false
 
@@ -9,16 +9,14 @@ export function generateStaticParams() {
   const availableRadii = [0, 0.3, 0.5, 0.75, 1];
 
   // limit themes to only the color themes
-  const availableThemes = baseColors.filter((theme) =>
-    !["slate", "stone", "gray", "neutral"].includes(theme.name)
-  );
+  const colors = Object.keys(baseColorsOKLCH);
 
   const params = [];
 
-  for (const theme of availableThemes) {
+  for (const color of colors) {
     for (const radius of availableRadii) {
       params.push({
-        color: theme.name,
+        color,
         radius: radius.toString(),
       });
     }
@@ -29,11 +27,11 @@ export function generateStaticParams() {
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ color: ThemeName, radius: number }> }
+  { params }: { params: Promise<{ color: string, radius: number }> }
 ) {
   const { color, radius } = await params
 
-  const theme = baseColors.find((theme) => theme.name === color)
+  const theme = baseColorsOKLCH[color as keyof typeof baseColorsOKLCH]
 
   return NextResponse.json({
     $schema: "https://ui.shadcn.com/schema/registry-item.json",
@@ -44,7 +42,7 @@ export async function GET(
     files: [
       {
         path: "src/app/globals.css",
-        content: `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n${getThemeCode(theme, radius)}`,
+        content: `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n${getThemeCodeOKLCH(theme, radius)}`,
         type: "registry:file",
         target: "app/globals.css"
       },
@@ -56,7 +54,7 @@ export async function GET(
       },
       {
         "path": "src/app/starters/root-layout.tsx",
-        "content": "import { Geist, Geist_Mono } from \"next/font/google\";\nimport React, { type ReactNode } from \"react\";\n\nimport { cn } from \"@/lib/utils\";\n\nimport \"@/app/globals.css\";\n\nconst GeistSans = Geist({\n  subsets: [\"latin\"],\n  variable: \"--font-geist-sans\",\n});\n\nconst GeistMono = Geist_Mono({\n  subsets: [\"latin\"],\n  variable: \"--font-geist-mono\",\n});\nexport default function RootLayout({\n  children,\n}: Readonly<{\n  children: ReactNode;\n}>) {\n  return (\n    <html\n      lang=\"en\"\n      className={cn(\n        GeistSans.variable,\n        GeistMono.variable,\n        \"bg-background text-foreground\",\n      )}\n    >\n      <body>\n        <main className=\"mt-16 flex w-full justify-center\">\n          <div className=\"container\">{children}</div>\n        </main>\n      </body>\n    </html>\n  );\n}\n",
+        "content": "import { Geist, Geist_Mono } from \"next/font/google\";\nimport React, { type ReactNode } from \"react\";\n\nimport { cn } from \"@/lib/utils\";\n\nimport \"@/app/globals.css\";\n\nconst GeistSans = Geist({\n  subsets: [\"latin\"],\n  variable: \"--font-geist-sans\",\n});\n\nconst GeistMono = Geist_Mono({\n  subsets: [\"latin\"],\n  variable: \"--font-geist-mono\",\n});\n\nexport default function RootLayout({\n  children,\n}: Readonly<{\n  children: ReactNode;\n}>) {\n  return (\n    <html\n      lang=\"en\"\n      className={cn(\n        GeistSans.variable,\n        GeistMono.variable,\n        \"bg-background text-foreground\",\n      )}\n    >\n      <body>\n        <main className=\"mt-16 flex w-full justify-center\">\n          <div className=\"container\">{children}</div>\n        </main>\n      </body>\n    </html>\n  );\n}\n",
         "type": "registry:file",
         "target": "app/layout.tsx"
       }

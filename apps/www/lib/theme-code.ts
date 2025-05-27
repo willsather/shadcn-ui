@@ -31,13 +31,13 @@ export function getThemeCodeOKLCH(theme: BaseColorOKLCH | undefined, radius: num
     "\n}\n"
 }
 
-export function getThemeRegistryItem(theme: BaseColor | undefined, radius: number) {
+export function getThemeRegistryItem(theme: BaseColorOKLCH | undefined, radius: number) {
   if (!theme) {
     return ""
   }
 
   return template(BASE_STYLE_REGISTRY_ITEM)({
-    colors: theme.cssVars,
+    colors: theme,
     radius: radius.toString(),
   });
 }

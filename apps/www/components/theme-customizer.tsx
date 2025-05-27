@@ -34,19 +34,18 @@ import {
 import { Separator } from "@/registry/new-york/ui/separator"
 import { Skeleton } from "@/registry/new-york/ui/skeleton"
 import {
-  BaseColor,
   baseColors,
   baseColorsOKLCH,
 } from "@/registry/registry-base-colors"
 
 import "@/styles/mdx.css"
+import { getThemeCode, getThemeCodeOKLCH } from "@/lib/theme-code"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/registry/new-york/ui/tabs"
-import { getThemeCode, getThemeCodeOKLCH } from "@/lib/theme-code"
 
 export function ThemeCustomizer() {
   const [config, setConfig] = useConfig()
@@ -95,6 +94,20 @@ export function Customizer() {
   React.useEffect(() => {
     setMounted(true)
   }, [])
+
+  // build open in v0 button url
+  const params = new URLSearchParams()
+  params.append(
+    "url",
+    `https://shadcn-ui-fork.vercel.app/themes/${config.theme}/${config.radius}/r/theme.json`
+  )
+  params.append("title", "Shadcn/ui Theme Kit")
+  params.append(
+    "prompt",
+    "This theme kit is provided by Shadcn/ui. All future generations must use these styles and colors unless instructed otherwise."
+  )
+
+  const v0Url = `https://v0.dev/chat/api/open?${params.toString()}`
 
   return (
     <ThemeWrapper defaultTheme="zinc">
@@ -172,7 +185,7 @@ export function Customizer() {
                   className={cn(
                     "w-[40px] rounded-lg",
                     config.radius === parseFloat(value) &&
-                    "border-primary/50 ring-[2px] ring-primary/30"
+                      "border-primary/50 ring-[2px] ring-primary/30"
                   )}
                 >
                   {value}
@@ -190,11 +203,7 @@ export function Customizer() {
             className="h-8 gap-1 rounded-lg bg-black px-3 text-xs text-white hover:bg-black hover:text-white dark:bg-white dark:text-black"
             asChild
           >
-            <a
-              href={`https://v0.dev/chat/api/open?url=https://shadcn-ui-fork.vercel.app/themes/${config.theme}/r/theme.json`}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={v0Url} target="_blank" rel="noreferrer">
               Open in{" "}
               <svg
                 viewBox="0 0 40 20"
@@ -220,9 +229,9 @@ export function Customizer() {
 }
 
 export function CopyCodeButton({
-                                 className,
-                                 ...props
-                               }: React.ComponentProps<typeof Button>) {
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
   return (
     <>
       <Drawer>
@@ -416,7 +425,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.light[
                           prefix as keyof typeof activeTheme.cssVars.light
-                          ]
+                        ]
                       }
                       ;
                     </span>
@@ -425,7 +434,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.light[
                           `${prefix}-foreground` as keyof typeof activeTheme.cssVars.light
-                          ]
+                        ]
                       }
                       ;
                     </span>
@@ -454,7 +463,7 @@ function CustomizerCode() {
                         {
                           activeTheme?.cssVars.light[
                             prefix as keyof typeof activeTheme.cssVars.light
-                            ]
+                          ]
                         }
                         ;
                       </span>
@@ -489,7 +498,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.dark[
                           prefix as keyof typeof activeTheme.cssVars.dark
-                          ]
+                        ]
                       }
                       ;
                     </span>
@@ -498,7 +507,7 @@ function CustomizerCode() {
                       {
                         activeTheme?.cssVars.dark[
                           `${prefix}-foreground` as keyof typeof activeTheme.cssVars.dark
-                          ]
+                        ]
                       }
                       ;
                     </span>
@@ -524,7 +533,7 @@ function CustomizerCode() {
                         {
                           activeTheme?.cssVars.dark[
                             prefix as keyof typeof activeTheme.cssVars.dark
-                            ]
+                          ]
                         }
                         ;
                       </span>
