@@ -425,7 +425,7 @@ export function Customizer() {
         </div>
       </div>
       {config.theme === "custom" && (
-        <div className="mt-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="mt-4 duration-200 animate-in slide-in-from-top-2">
           <div className="rounded-lg border bg-background p-4">
             <div className="flex gap-4">
               {/* Base Color */}
