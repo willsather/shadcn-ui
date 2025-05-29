@@ -318,7 +318,8 @@ function CustomizerCode() {
           command: "npx",
           args: ["-y", "shadcn@canary", "registry:mcp"],
           env: {
-            REGISTRY_URL: `https://ui.shadcn.com/themes/${config.theme}/${config.radius}/r/registry.json`,
+            // FIXME: this would need to be the main `ui.shadcn.com` URL eventually
+            REGISTRY_URL: `https://shadcn-ui-fork.vercel.app/themes/${config.theme}/${config.radius}/r/registry.json`,
           },
         },
       },
