@@ -6,7 +6,7 @@ import { Style } from "@/registry/registry-styles"
 
 type Config = {
   style: Style["name"]
-  theme: BaseColor["name"]
+  theme: BaseColor["name"] | "custom"
   radius: number
   packageManager: "npm" | "yarn" | "pnpm" | "bun"
   installationType: "cli" | "manual"
