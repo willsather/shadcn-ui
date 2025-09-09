@@ -2,13 +2,11 @@ import { Metadata } from "next"
 
 import { Announcement } from "@/components/announcement"
 import {
-  PageActions,
   PageHeader,
   PageHeaderDescription,
   PageHeaderHeading,
 } from "@/components/page-header"
 import { Customizer } from "@/components/theme-customizer"
-import { Button } from "@/registry/new-york/ui/button"
 
 const title = "Add colors. Make it yours."
 const description =

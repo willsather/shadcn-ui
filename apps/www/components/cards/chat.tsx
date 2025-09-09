@@ -102,7 +102,7 @@ export function CardsChat() {
           <div className="flex items-center space-x-4">
             <Avatar>
               <AvatarImage src="/avatars/01.png" alt="Image" />
-              <AvatarFallback>OM</AvatarFallback>
+              <AvatarFallback>SD</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-sm font-medium leading-none">Sofia Davis</p>

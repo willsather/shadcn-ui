@@ -755,6 +755,11 @@ export const baseColors = [
 
 export type BaseColor = (typeof baseColors)[number]
 
+export interface BaseColorOKLCH {
+  light: Record<string, string>
+  dark: Record<string, string>
+}
+
 export const baseColorsV4 = {
   stone: {
     light: {
